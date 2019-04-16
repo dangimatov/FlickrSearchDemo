@@ -4,7 +4,7 @@ package com.dgimatov.flickrsearchdemo.search.model;
 /**
  * Repository which gives us list of {@link ImageUrl} and some metadata we can use
  */
-interface ImagesSearchRepository {
+public interface ImagesSearchRepository {
 
     /**
      * Makes a request for given params and returns a result throw given callback

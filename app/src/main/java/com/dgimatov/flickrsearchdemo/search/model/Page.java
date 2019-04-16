@@ -6,22 +6,51 @@ import java.util.List;
  * Single page of images
  */
 public class Page {
-    private final int page;
-    private final int pages;
+    private final int currentPage;
+    private final int totalPages;
     private final List<ImageUrl> imageUrls;
 
-    public Page(int page, int pages, List<ImageUrl> imageUrls) {
-        this.page = page;
-        this.pages = pages;
+    public Page(int currentPage, int totalPages, List<ImageUrl> imageUrls) {
+        this.currentPage = currentPage;
+        this.totalPages = totalPages;
         this.imageUrls = imageUrls;
     }
 
-    public int getTotalPages() {
-        return pages;
+    public int getCurrentPage() {
+        return currentPage;
     }
 
-    public int getCurrentPage() {
-        return page;
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    @Override
+    public String toString() {
+        return "Page{" +
+                "currentPage=" + currentPage +
+                ", totalPages=" + totalPages +
+                ", imageUrls=" + imageUrls +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Page page = (Page) o;
+
+        if (currentPage != page.currentPage) return false;
+        if (totalPages != page.totalPages) return false;
+        return imageUrls != null ? imageUrls.equals(page.imageUrls) : page.imageUrls == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = currentPage;
+        result = 31 * result + totalPages;
+        result = 31 * result + (imageUrls != null ? imageUrls.hashCode() : 0);
+        return result;
     }
 
     /**
@@ -32,32 +61,4 @@ public class Page {
     }
 
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Page page1 = (Page) o;
-
-        if (page != page1.page) return false;
-        if (pages != page1.pages) return false;
-        return imageUrls != null ? imageUrls.equals(page1.imageUrls) : page1.imageUrls == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = page;
-        result = 31 * result + pages;
-        result = 31 * result + (imageUrls != null ? imageUrls.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "ImageUrlsPage{" +
-                "page=" + page +
-                ", pages=" + pages +
-                ", imageUrls=" + imageUrls +
-                '}';
-    }
 }
