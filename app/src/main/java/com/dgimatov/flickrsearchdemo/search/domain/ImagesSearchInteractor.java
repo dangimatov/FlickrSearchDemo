@@ -48,7 +48,7 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter {
      */
     public void unsubscribeFromState() {
         listeners.clear();
-        imagesSearchRepository.unsubscribe();
+        imagesSearchRepository.unsubscribeAll();
     }
 
     private void pushStateToListeners(ImagesSearchViewState state) {
@@ -70,7 +70,7 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter {
         }
 
         if (text.isEmpty()) {
-            imagesSearchRepository.unsubscribe();
+            imagesSearchRepository.unsubscribeAll();
         }
 
         imagesSearchRepository.subscribe(text, 1, new Listener<Page>() {

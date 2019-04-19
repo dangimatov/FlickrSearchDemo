@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -23,6 +24,7 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
     private final PageDeserializer pageDeserializer;
 
     private final Map<String, Listener<Page>> listeners = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, Runnable> tasks = Collections.synchronizedMap(new HashMap<>());
 
     public FlickrSearchApiClient(ThreadPoolExecutor threadPoolExecutor, PageDeserializer pageDeserializer) {
         this.threadPoolExecutor = threadPoolExecutor;
@@ -30,7 +32,7 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
     }
 
     private void makeSearchRequest(String requestUrl) {
-        threadPoolExecutor.execute(() -> {
+        Runnable runnable = () -> {
             Log.i("test_", "loading urls on " + Thread.currentThread().getName() + "for url: " + requestUrl);
             HttpURLConnection urlConnection = null;
             try {
@@ -59,13 +61,15 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
                     urlConnection.disconnect();
                 }
             }
-        });
+        };
+        tasks.put(requestUrl, runnable);
+        threadPoolExecutor.execute(runnable);
     }
 
     @Override
     public void subscribe(String text, int page, Listener<Page> listener) {
+        unsubscribeAll();
         String requestUrl = buildRequestUrl(text, page);
-        listeners.clear();
         listeners.put(requestUrl, listener);
         makeSearchRequest(requestUrl);
     }
@@ -75,7 +79,14 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
     }
 
     @Override
-    public void unsubscribe() {
+    public void unsubscribeAll() {
         listeners.clear();
+        Set<String> urls = tasks.keySet();
+        synchronized (tasks) {
+            for (String url : urls) {
+                threadPoolExecutor.remove(tasks.get(url));
+            }
+        }
+        tasks.clear();
     }
 }

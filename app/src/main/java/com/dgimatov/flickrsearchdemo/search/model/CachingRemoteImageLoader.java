@@ -18,13 +18,14 @@ import java.util.concurrent.ThreadPoolExecutor;
  * Loads remote images and caches them using LRU cache
  */
 public class CachingRemoteImageLoader implements ImageLoader {
-    private final ThreadPoolExecutor executor;
+    private final ThreadPoolExecutor threadPoolExecutor;
 
     private final int MAX_CACHE_SIZE = 10 * 1024 * 1024;
 
-    private Handler uiHandler = new Handler(Looper.getMainLooper());
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
 
-    private Map<String, Listener<Bitmap>> listeners = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, Listener<Bitmap>> listeners = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, Runnable> tasks = Collections.synchronizedMap(new HashMap<>());
 
     private LruCache<String, Bitmap> bitmapCache = new LruCache<String, Bitmap>(MAX_CACHE_SIZE) {
         @Override
@@ -33,8 +34,8 @@ public class CachingRemoteImageLoader implements ImageLoader {
         }
     };
 
-    public CachingRemoteImageLoader(ThreadPoolExecutor executor) {
-        this.executor = executor;
+    public CachingRemoteImageLoader(ThreadPoolExecutor threadPoolExecutor) {
+        this.threadPoolExecutor = threadPoolExecutor;
     }
 
     @Override
@@ -46,6 +47,8 @@ public class CachingRemoteImageLoader implements ImageLoader {
     @Override
     public void unsubscribe(String url) {
         listeners.remove(url);
+        threadPoolExecutor.remove(tasks.get(url));
+        tasks.remove(url);
     }
 
     private Runnable fetchRemoteRunnable(String url) {
@@ -91,7 +94,8 @@ public class CachingRemoteImageLoader implements ImageLoader {
             }
         } else {
             Runnable fetchRemoteRunnable = fetchRemoteRunnable(url);
-            executor.execute(fetchRemoteRunnable);
+            tasks.put(url, fetchRemoteRunnable);
+            threadPoolExecutor.execute(fetchRemoteRunnable);
         }
     }
 }

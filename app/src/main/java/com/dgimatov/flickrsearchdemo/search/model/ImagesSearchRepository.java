@@ -17,7 +17,7 @@ public interface ImagesSearchRepository {
 
     /**
      * Unsubscribe from repository. Meaning we are no longer interested in results and repo should
-     * drop anything it's currently busy with and remove reference to our listener
+     * drop anything it's currently busy with and remove references to our listeners
      */
-    void unsubscribe();
+    void unsubscribeAll();
 }
