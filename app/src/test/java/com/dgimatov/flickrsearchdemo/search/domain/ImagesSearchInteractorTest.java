@@ -4,6 +4,7 @@ import com.dgimatov.flickrsearchdemo.search.model.ImageUrl;
 import com.dgimatov.flickrsearchdemo.search.model.ImagesSearchRepository;
 import com.dgimatov.flickrsearchdemo.search.model.Listener;
 import com.dgimatov.flickrsearchdemo.search.model.Page;
+import com.dgimatov.flickrsearchdemo.search.view.ImagesSearchView;
 import com.dgimatov.flickrsearchdemo.search.view.ImagesSearchViewState;
 
 import org.json.JSONException;
@@ -37,13 +38,13 @@ public class ImagesSearchInteractorTest {
     private ImagesSearchRepository imagesSearchRepository;
 
     @Mock
-    private Listener<ImagesSearchViewState> stateListener;
+    private ImagesSearchView view;
 
     @InjectMocks
     private ImagesSearchInteractor testee;
 
     @Test
-    public void newSearchHappyCase() {
+    public void newSearch_HappyCase() {
         //Given
         doAnswer(invocation -> {
             String requestParamText = invocation.getArgument(0);
@@ -56,18 +57,18 @@ public class ImagesSearchInteractorTest {
         }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
 
         //When
-        testee.subscribeToState(stateListener);
+        testee.onStart(view);
         testee.newSearch("toyota");
 
         //Then
-        InOrder inOrder = inOrder(stateListener);
-        inOrder.verify(stateListener).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener).onNext(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        InOrder inOrder = inOrder(view);
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
 
     }
 
     @Test
-    public void newSearchEmptySearchText() {
+    public void newSearch_NoViewCallsAfterUnsubscribe() {
         //Given
         doAnswer(invocation -> {
             Listener<Page> listener = invocation.getArgument(2);
@@ -76,75 +77,63 @@ public class ImagesSearchInteractorTest {
         }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
 
         //When
-        testee.subscribeToState(stateListener);
+        testee.onStart(view);
+        testee.newSearch("toyota");
+        testee.onStop();
+        //In reality should not happen
+        testee.newSearch("toyota");
+
+        //Then
+        InOrder inOrder = inOrder(view);
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+
+    }
+
+    @Test
+    public void newSearch_EmptySearchText() {
+        //Given
+        doAnswer(invocation -> {
+            Listener<Page> listener = invocation.getArgument(2);
+            listener.onNext(expectedPage);
+            return null;
+        }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
+
+        //When
+        testee.onStart(view);
         testee.newSearch("toyota");
         testee.newSearch("");
 
         //Then
-        InOrder inOrder = inOrder(stateListener);
-        inOrder.verify(stateListener).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener).onNext(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
-        inOrder.verify(stateListener).onNext(new ImagesSearchViewState.ShowImages(Collections.emptyList()));
+        InOrder inOrder = inOrder(view);
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(Collections.emptyList()));
 
     }
 
     @Test
-    public void newSearchErrorOccurred() {
+    public void newSearch_ErrorOccurred() {
         //Given
         Throwable error = new JSONException("");
         doAnswer(invocation -> {
-            String requestParamText = invocation.getArgument(0);
-            assertEquals("toyota", requestParamText);
-            int requestParamPage = invocation.getArgument(1);
-            assertEquals(1, requestParamPage);
             Listener<Page> listener = invocation.getArgument(2);
             listener.onError(error);
             return null;
         }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
 
         //When
-        testee.subscribeToState(stateListener);
+        testee.onStart(view);
         testee.newSearch("toyota");
 
         //Then
-        InOrder inOrder = inOrder(stateListener);
-        inOrder.verify(stateListener).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener).onNext(new ImagesSearchViewState.Error(error));
-
+        InOrder inOrder = inOrder(view);
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.Error(error));
     }
 
     @Test
-    public void lastPage() {
-        //Given
-        final Page expectedOnlyPage = new Page(1, 1, Arrays.asList(
-                new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755_z.jpg"),
-                new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0_z.jpg")));
-
-        doAnswer(invocation -> {
-            String requestParamText = invocation.getArgument(0);
-            assertEquals("toyota", requestParamText);
-            int requestParamPage = invocation.getArgument(1);
-            assertEquals(1, requestParamPage);
-            Listener<Page> listener = invocation.getArgument(2);
-            listener.onNext(expectedOnlyPage);
-            return null;
-        }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
-
-        //When
-        testee.subscribeToState(stateListener);
-        testee.newSearch("toyota");
-        testee.nextPage();
-
-        //Then
-        InOrder inOrder = inOrder(stateListener);
-        inOrder.verify(stateListener).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener).onNext(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
-        inOrder.verify(stateListener).onNext(ImagesSearchViewState.LastPage.INSTANCE);
-
-    }
-
-    @Test
-    public void nextPageHappyCase() {
+    public void nextPage_HappyCase() {
         //Given
         List<ImageUrl> expectedCombinedList = new ArrayList<>();
         expectedCombinedList.addAll(expectedPage.getImageUrls());
@@ -166,24 +155,47 @@ public class ImagesSearchInteractorTest {
         }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
 
         //When
-        testee.subscribeToState(stateListener);
+        testee.onStart(view);
         testee.newSearch("toyota");
         testee.nextPage();
 
         //Then
+        InOrder inOrder = inOrder(view);
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedCombinedList));
+    }
 
-        InOrder inOrder = inOrder(stateListener);
-        inOrder.verify(stateListener, times(1)).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener, times(1)).onNext(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
-        inOrder.verify(stateListener, times(1)).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener, times(1)).onNext(new ImagesSearchViewState.ShowImages(expectedCombinedList));
+    @Test
+    public void nextPage_NotPossible_LastPage() {
+        //Given
+        final Page expectedOnlyPage = new Page(1, 1, Arrays.asList(
+                new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755_z.jpg"),
+                new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0_z.jpg")));
+
+        doAnswer(invocation -> {
+            Listener<Page> listener = invocation.getArgument(2);
+            listener.onNext(expectedOnlyPage);
+            return null;
+        }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
+
+        //When
+        testee.onStart(view);
+        testee.newSearch("toyota");
+        testee.nextPage();
+
+        //Then
+        InOrder inOrder = inOrder(view);
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(ImagesSearchViewState.LastPage.INSTANCE);
     }
 
     @Test
     public void nextPageErrorOccurred() {
-        Throwable error = new JSONException("");
         //Given
-
+        Throwable error = new JSONException("");
         doAnswer(invocation -> {
             int requestParamPage = invocation.getArgument(1);
             Listener<Page> listener = invocation.getArgument(2);
@@ -197,17 +209,16 @@ public class ImagesSearchInteractorTest {
         }).when(imagesSearchRepository).subscribe(anyString(), anyInt(), ArgumentMatchers.<Listener<Page>>any());
 
         //When
-        testee.subscribeToState(stateListener);
+        testee.onStart(view);
         testee.newSearch("toyota");
         testee.nextPage();
 
         //Then
-        InOrder inOrder = inOrder(stateListener);
-        inOrder.verify(stateListener, times(1)).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener, times(1)).onNext(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
-        inOrder.verify(stateListener, times(1)).onNext(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(stateListener, times(1)).onNext(new ImagesSearchViewState.Error(error));
-
+        InOrder inOrder = inOrder(view);
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
+        inOrder.verify(view).updateState(new ImagesSearchViewState.Error(error));
     }
 
 }

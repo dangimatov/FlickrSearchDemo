@@ -18,14 +18,19 @@ import android.widget.Toast;
 
 import com.dgimatov.flickrsearchdemo.R;
 import com.dgimatov.flickrsearchdemo.di.DependenciesProvider;
+import com.dgimatov.flickrsearchdemo.search.domain.ImagesSearchInteractor;
 
 import java.util.Collections;
 
 import static com.dgimatov.flickrsearchdemo.search.view.ImagesSearchViewState.*;
 
+/**
+ * Main activity which holds references to and initializes views.
+ * Also injects an interactor and maps it's states to updates of activity's views
+ */
 public class MainActivity extends AppCompatActivity implements ImagesSearchView {
 
-    private ImagesSearchPresenter presenter;
+    private ImagesSearchInteractor interactor;
     private ImagesListAdapter adapter;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
@@ -39,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
 
         initRecyclerView();
 
-        presenter = DependenciesProvider.provideImagesSearchPresenter();
+        interactor = DependenciesProvider.provideImagesSearchInteractor();
 
         searchEditText = findViewById(R.id.searchEditText);
 
@@ -58,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
 
             @Override
             public void afterTextChanged(Editable s) {
-                presenter.newSearch(s.toString());
+                interactor.newSearch(s.toString());
             }
         });
     }
@@ -75,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 if (userAsksForMoreImages(newState, layoutManager)) {
-                    presenter.nextPage();
+                    interactor.nextPage();
                 }
             }
         });
@@ -89,13 +94,13 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
     @Override
     protected void onStart() {
         super.onStart();
-        presenter.onStart(this);
+        interactor.onStart(this);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        presenter.onStop();
+        interactor.onStop();
     }
 
     private void showErrorDialog(Throwable e) {
@@ -128,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
 
             if (state instanceof Loading) {
                 progressBar.setVisibility(View.VISIBLE);
-                recyclerView.setAlpha(0.3f);
+                recyclerView.setAlpha(0.5f);
             }
 
             if (state instanceof LastPage) {

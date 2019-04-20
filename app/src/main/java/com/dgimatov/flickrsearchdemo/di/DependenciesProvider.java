@@ -6,7 +6,6 @@ import com.dgimatov.flickrsearchdemo.search.model.FlickrSearchApiClient;
 import com.dgimatov.flickrsearchdemo.search.model.ImageLoader;
 import com.dgimatov.flickrsearchdemo.search.model.ImagesSearchRepository;
 import com.dgimatov.flickrsearchdemo.search.model.PageDeserializer;
-import com.dgimatov.flickrsearchdemo.search.view.ImagesSearchPresenter;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -33,12 +32,8 @@ public class DependenciesProvider {
                 singleThreadPoolExecutor(), pageDeserializer());
     }
 
-    private static ImagesSearchInteractor provideImagesSearchInteractor() {
+    public static ImagesSearchInteractor provideImagesSearchInteractor() {
         return new ImagesSearchInteractor(provideImagesSearchRepository());
-    }
-
-    public static ImagesSearchPresenter provideImagesSearchPresenter() {
-        return new ImagesSearchPresenter(provideImagesSearchInteractor());
     }
 
     private static ThreadPoolExecutor multiThreadPoolExecutor() {
