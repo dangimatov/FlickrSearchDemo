@@ -1,13 +1,16 @@
 package com.dgimatov.flickrsearchdemo.search.view;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -15,6 +18,8 @@ import android.widget.Toast;
 
 import com.dgimatov.flickrsearchdemo.R;
 import com.dgimatov.flickrsearchdemo.di.DependenciesProvider;
+
+import java.util.Collections;
 
 import static com.dgimatov.flickrsearchdemo.search.view.ImagesSearchViewState.*;
 
@@ -24,6 +29,8 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
     private ImagesListAdapter adapter;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
+    private EditText searchEditText;
+    private Handler uiHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +41,11 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
 
         presenter = DependenciesProvider.provideImagesSearchPresenter();
 
+        searchEditText = findViewById(R.id.searchEditText);
+
         progressBar = findViewById(R.id.progress);
 
-        ((EditText) findViewById(R.id.searchEditText)).addTextChangedListener(new TextWatcher() {
+        searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -89,29 +98,44 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
         presenter.onStop();
     }
 
+    private void showErrorDialog(Throwable e) {
+        new AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setCancelable(true)
+                .setMessage("Images loading failed: " + e.getLocalizedMessage())
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
     @Override
     public void updateState(ImagesSearchViewState state) {
-        if (state instanceof ShowImages) {
-            adapter.imageUrls = ((ShowImages) state).imageUrls;
-            adapter.notifyDataSetChanged();
-            progressBar.setVisibility(View.GONE);
-            recyclerView.setAlpha(1);
-        }
+        uiHandler.post(() -> {
+            if (state instanceof ShowImages) {
+                adapter.imageUrls = ((ShowImages) state).imageUrls;
+                adapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.GONE);
+                recyclerView.setAlpha(1);
+            }
 
-        if (state instanceof ImagesSearchViewState.Error) {
-            progressBar.setVisibility(View.GONE);
-            recyclerView.setAlpha(1);
-        }
+            if (state instanceof ImagesSearchViewState.Error) {
+                recyclerView.setAlpha(1);
+                progressBar.setVisibility(View.GONE);
+                adapter.imageUrls = Collections.emptyList();
+                adapter.notifyDataSetChanged();
+                searchEditText.setText("");
+                showErrorDialog(((ImagesSearchViewState.Error) state).exception);
+            }
 
-        if (state instanceof Loading) {
-            progressBar.setVisibility(View.VISIBLE);
-            recyclerView.setAlpha(0.3f);
-        }
+            if (state instanceof Loading) {
+                progressBar.setVisibility(View.VISIBLE);
+                recyclerView.setAlpha(0.3f);
+            }
 
-        if (state instanceof LastPage) {
-            progressBar.setVisibility(View.GONE);
-            recyclerView.setAlpha(1);
-            Toast.makeText(this, "These are no more images based on your search", Toast.LENGTH_SHORT).show();
-        }
+            if (state instanceof LastPage) {
+                progressBar.setVisibility(View.GONE);
+                recyclerView.setAlpha(1);
+                Toast.makeText(this, "These are no more images based on your search", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

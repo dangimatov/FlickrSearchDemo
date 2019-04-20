@@ -19,7 +19,7 @@ public class PageDeserializer {
      * @return Deserialized {@link Page} object from json string
      * @throws JSONException
      */
-    public Page deserialize(String json) throws JSONException {
+    Page deserialize(String json) throws JSONException {
         JSONObject pageContent = new JSONObject(json).getJSONObject("photos");
         int currentPage = pageContent.getInt("page");
         int totalPages = pageContent.getInt("pages");

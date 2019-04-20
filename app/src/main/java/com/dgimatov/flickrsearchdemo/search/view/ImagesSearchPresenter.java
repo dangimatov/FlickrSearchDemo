@@ -1,7 +1,7 @@
 package com.dgimatov.flickrsearchdemo.search.view;
 
-import android.os.Handler;
-import android.os.Looper;
+
+import android.util.Log;
 
 import com.dgimatov.flickrsearchdemo.search.domain.ImagesSearchInteractor;
 import com.dgimatov.flickrsearchdemo.search.model.Listener;
@@ -11,7 +11,6 @@ import com.dgimatov.flickrsearchdemo.search.model.Listener;
  */
 public class ImagesSearchPresenter implements Presenter<ImagesSearchView>, ImagesSearchActionsPresenter {
 
-    private final Handler uiHandler = new Handler(Looper.getMainLooper());
 
     private final ImagesSearchInteractor imagesSearchInteractor;
 
@@ -24,12 +23,12 @@ public class ImagesSearchPresenter implements Presenter<ImagesSearchView>, Image
         imagesSearchInteractor.subscribeToState(new Listener<ImagesSearchViewState>() {
             @Override
             public void onNext(ImagesSearchViewState value) {
-                uiHandler.post(() -> view.updateState(value));
+                view.updateState(value);
             }
 
             @Override
             public void onError(Throwable e) {
-
+                Log.e("", "Unhandled runtime exception on stateSubscription: " + Log.getStackTraceString(e));
             }
         });
     }

@@ -61,23 +61,26 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter {
 
     @Override
     public void newSearch(String text) {
-        pushStateToListeners(Loading.INSTANCE);
-        currentQuery = text;
         currentPage = 1;
+
         if (!currentUrls.isEmpty()) {
             currentUrls.clear();
             pushStateToListeners(new ShowImages(Collections.emptyList()));
         }
 
-        if (text.isEmpty()) {
+        if (text.isEmpty() || text.equals(currentQuery)) {
             imagesSearchRepository.unsubscribeAll();
+            return;
         }
+
+        currentQuery = text;
+        pushStateToListeners(Loading.INSTANCE);
 
         imagesSearchRepository.subscribe(text, 1, new Listener<Page>() {
             @Override
             public void onNext(Page value) {
                 currentUrls.addAll(value.getImageUrls());
-                pushStateToListeners(new ShowImages(currentUrls));
+                pushStateToListeners(new ShowImages(new ArrayList<>(currentUrls)));
                 canLoadMore = value.getTotalPages() > 1;
             }
 
@@ -85,7 +88,6 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter {
             public void onError(Throwable e) {
                 pushStateToListeners(new ImagesSearchViewState.Error(e));
             }
-
         });
     }
 
@@ -102,7 +104,7 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter {
             @Override
             public void onNext(Page value) {
                 currentUrls.addAll(value.getImageUrls());
-                pushStateToListeners(new ShowImages(currentUrls));
+                pushStateToListeners(new ShowImages(new ArrayList<>(currentUrls)));
                 canLoadMore = value.getTotalPages() > currentPage;
             }
 
