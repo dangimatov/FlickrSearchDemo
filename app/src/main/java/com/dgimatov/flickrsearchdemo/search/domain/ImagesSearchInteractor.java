@@ -12,6 +12,8 @@ import com.dgimatov.flickrsearchdemo.search.view.Presenter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.dgimatov.flickrsearchdemo.search.view.ImagesSearchViewState.*;
 
@@ -23,10 +25,10 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter, Pre
 
     private final ImagesSearchRepository imagesSearchRepository;
 
-    private int currentPage = 1;
+    private final AtomicInteger currentPage = new AtomicInteger(1);
     private String currentQuery = "";
-    private boolean canLoadMore = false;
-    private List<ImageUrl> currentUrls = new ArrayList<>();
+    private AtomicBoolean canLoadMore = new AtomicBoolean(false);
+    private final List<ImageUrl> currentUrls = new ArrayList<>();
 
     private ImagesSearchView view;
 
@@ -42,27 +44,25 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter, Pre
 
     @Override
     public void newSearch(String text) {
-        currentPage = 1;
+        currentPage.set(1);
+        currentUrls.clear();
+        currentQuery = text;
+        pushStateToView(new ShowImages(Collections.emptyList()));
 
-        if (!currentUrls.isEmpty()) {
-            currentUrls.clear();
-            pushStateToView(new ShowImages(Collections.emptyList()));
-        }
-
-        if (text.isEmpty() || text.equals(currentQuery)) {
+        if (text.isEmpty()) {
             imagesSearchRepository.unsubscribeAll();
             return;
         }
 
-        currentQuery = text;
         pushStateToView(Loading.INSTANCE);
-
         imagesSearchRepository.subscribe(text, 1, new Listener<Page>() {
             @Override
             public void onNext(Page value) {
-                currentUrls.addAll(value.getImageUrls());
-                pushStateToView(new ShowImages(new ArrayList<>(currentUrls)));
-                canLoadMore = value.getTotalPages() > 1;
+                synchronized (currentUrls) {
+                    currentUrls.addAll(value.getImageUrls());
+                    pushStateToView(new ShowImages(new ArrayList<>(currentUrls)));
+                }
+                canLoadMore.set(value.getTotalPages() > 1);
             }
 
             @Override
@@ -74,19 +74,21 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter, Pre
 
     @Override
     public void nextPage() {
-        if (!canLoadMore) {
+        if (!canLoadMore.get()) {
             pushStateToView(LastPage.INSTANCE);
             return;
         }
 
         pushStateToView(Loading.INSTANCE);
 
-        imagesSearchRepository.subscribe(currentQuery, ++currentPage, new Listener<Page>() {
+        imagesSearchRepository.subscribe(currentQuery, currentPage.incrementAndGet(), new Listener<Page>() {
             @Override
             public void onNext(Page value) {
-                currentUrls.addAll(value.getImageUrls());
-                pushStateToView(new ShowImages(new ArrayList<>(currentUrls)));
-                canLoadMore = value.getTotalPages() > currentPage;
+                synchronized (currentUrls) {
+                    currentUrls.addAll(value.getImageUrls());
+                    pushStateToView(new ShowImages(new ArrayList<>(currentUrls)));
+                }
+                canLoadMore.set(value.getTotalPages() > currentPage.get());
             }
 
             @Override

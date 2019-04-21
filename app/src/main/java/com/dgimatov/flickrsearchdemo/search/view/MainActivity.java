@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -36,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
     private RecyclerView recyclerView;
     private EditText searchEditText;
     private Handler uiHandler = new Handler();
+    private Runnable newSearchRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +63,9 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
 
             @Override
             public void afterTextChanged(Editable s) {
-                interactor.newSearch(s.toString());
+                uiHandler.removeCallbacks(newSearchRunnable);
+                newSearchRunnable = () -> interactor.newSearch(s.toString());
+                uiHandler.postDelayed(newSearchRunnable, 500);
             }
         });
     }

@@ -2,6 +2,7 @@ package com.dgimatov.flickrsearchdemo.search.model;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.LruCache;
@@ -12,30 +13,36 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Loads remote images and caches them using LRU cache
  */
-public class CachingRemoteImageLoader implements ImageLoader {
-    private final ThreadPoolExecutor threadPoolExecutor;
+public final class CachingRemoteImageLoader implements ImageLoader {
 
-    private final int MAX_CACHE_SIZE = 10 * 1024 * 1024;
+    private static final int MAX_CACHE_SIZE_BYTES = 10 * 1024 * 1024; //~60 images
 
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
 
     private final Map<String, Listener<Bitmap>> listeners = Collections.synchronizedMap(new HashMap<>());
     private final Map<String, Runnable> tasks = Collections.synchronizedMap(new HashMap<>());
 
-    private LruCache<String, Bitmap> bitmapCache = new LruCache<String, Bitmap>(MAX_CACHE_SIZE) {
+    private static final ThreadPoolExecutor threadPoolExecutor =
+            (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+    private static LruCache<String, Bitmap> bitmapCache = new LruCache<String, Bitmap>(MAX_CACHE_SIZE_BYTES) {
         @Override
         protected int sizeOf(String key, Bitmap value) {
-            return value.getByteCount();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                return value.getAllocationByteCount();
+            } else {
+                return value.getByteCount();
+            }
         }
     };
 
-    public CachingRemoteImageLoader(ThreadPoolExecutor threadPoolExecutor) {
-        this.threadPoolExecutor = threadPoolExecutor;
+    private CachingRemoteImageLoader() {
     }
 
     @Override
@@ -57,7 +64,7 @@ public class CachingRemoteImageLoader implements ImageLoader {
             try {
                 httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
                 httpURLConnection.setConnectTimeout(500);
-                httpURLConnection.setReadTimeout(1000);
+                httpURLConnection.setReadTimeout(1500);
                 InputStream is = httpURLConnection.getInputStream();
                 Bitmap bitmap = BitmapFactory.decodeStream(is);
                 bitmapCache.put(url, bitmap);
@@ -97,5 +104,16 @@ public class CachingRemoteImageLoader implements ImageLoader {
             tasks.put(url, fetchRemoteRunnable);
             threadPoolExecutor.execute(fetchRemoteRunnable);
         }
+    }
+
+    private static class InstanceHolder {
+        static final CachingRemoteImageLoader INSTANCE = new CachingRemoteImageLoader();
+    }
+
+    /**
+     * @return instance of the class
+     */
+    public static CachingRemoteImageLoader getInstance() {
+        return InstanceHolder.INSTANCE;
     }
 }

@@ -31,7 +31,7 @@ public class PageDeserializer {
             String secret = image.getString("secret");
             String server = image.getString("server");
             int farm = image.getInt("farm");
-            String imageUrl = String.format(IMAGE_URL_SCHEMA_MEDIUM_SIZE, farm, server, id, secret, "z");
+            String imageUrl = String.format(IMAGE_URL_SCHEMA_MEDIUM_SIZE, farm, server, id, secret, "m");
             imageUrls.add(new ImageUrl(imageUrl));
         }
         return new Page(currentPage, totalPages, imageUrls);
