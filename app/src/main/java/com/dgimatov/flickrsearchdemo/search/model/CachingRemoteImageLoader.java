@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * Loads remote images and caches them using LRU cache
  */
-public final class CachingRemoteImageLoader implements ImageLoader {
+public final class CachingRemoteImageLoader implements ImageLoaderRepository {
 
     private static final int MAX_CACHE_SIZE_BYTES = 10 * 1024 * 1024; //~60 images
     private static final int CONNECT_TIMEOUT_MILLIS = 500;

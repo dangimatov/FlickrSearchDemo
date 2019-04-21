@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 /**
  * Loads image by given id
  */
-public interface ImageLoader {
+public interface ImageLoaderRepository {
 
     /**
      * Loads image with given id and subscribes to a result with given listener

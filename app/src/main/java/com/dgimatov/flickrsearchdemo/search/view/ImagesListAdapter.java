@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.dgimatov.flickrsearchdemo.R;
-import com.dgimatov.flickrsearchdemo.search.model.ImageLoader;
+import com.dgimatov.flickrsearchdemo.search.model.ImageLoaderRepository;
 import com.dgimatov.flickrsearchdemo.search.model.ImageUrl;
 import com.dgimatov.flickrsearchdemo.search.model.Listener;
 
@@ -25,10 +25,10 @@ import androidx.recyclerview.widget.RecyclerView;
  * Adapter for images list
  */
 public class ImagesListAdapter extends RecyclerView.Adapter<ImagesListAdapter.ImageViewHolder> {
-    private final ImageLoader imageLoader;
+    private final ImageLoaderRepository imageLoaderRepository;
 
-    ImagesListAdapter(ImageLoader imageLoader) {
-        this.imageLoader = imageLoader;
+    ImagesListAdapter(ImageLoaderRepository imageLoaderRepository) {
+        this.imageLoaderRepository = imageLoaderRepository;
     }
 
     List<ImageUrl> imageUrls = new ArrayList<>();
@@ -42,10 +42,10 @@ public class ImagesListAdapter extends RecyclerView.Adapter<ImagesListAdapter.Im
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         holder.iv.setImageResource(android.R.color.transparent);
-        imageLoader.unsubscribe(holder.currentUrl);
+        imageLoaderRepository.unsubscribe(holder.currentUrl);
         holder.currentUrl = imageUrls.get(position).getUrl();
 
-        imageLoader.subscribe(holder.currentUrl, new Listener<Bitmap>() {
+        imageLoaderRepository.subscribe(holder.currentUrl, new Listener<Bitmap>() {
             @Override
             public void onNext(Bitmap bitmap) {
                 holder.iv.setImageBitmap(bitmap);
@@ -62,7 +62,7 @@ public class ImagesListAdapter extends RecyclerView.Adapter<ImagesListAdapter.Im
      * Callback from a view that all running activities should be stopped
      */
     void onStop() {
-        imageLoader.unsubscribeAll();
+        imageLoaderRepository.unsubscribeAll();
     }
 
     private Drawable getErrorDrawable() {

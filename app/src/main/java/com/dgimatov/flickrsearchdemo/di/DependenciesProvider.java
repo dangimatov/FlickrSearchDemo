@@ -3,7 +3,7 @@ package com.dgimatov.flickrsearchdemo.di;
 import com.dgimatov.flickrsearchdemo.search.domain.ImagesSearchInteractor;
 import com.dgimatov.flickrsearchdemo.search.model.CachingRemoteImageLoader;
 import com.dgimatov.flickrsearchdemo.search.model.FlickrSearchApiClient;
-import com.dgimatov.flickrsearchdemo.search.model.ImageLoader;
+import com.dgimatov.flickrsearchdemo.search.model.ImageLoaderRepository;
 import com.dgimatov.flickrsearchdemo.search.model.ImagesSearchRepository;
 import com.dgimatov.flickrsearchdemo.search.model.PageDeserializer;
 
@@ -39,9 +39,9 @@ public final class DependenciesProvider {
     }
 
     /**
-     * @return instance of {@link ImageLoader}
+     * @return instance of {@link ImageLoaderRepository}
      */
-    public static ImageLoader provideImagesLoader() {
+    public static ImageLoaderRepository provideImagesLoader() {
         return CachingRemoteImageLoader.getInstance();
     }
 }

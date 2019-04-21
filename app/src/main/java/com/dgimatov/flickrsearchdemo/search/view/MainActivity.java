@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
 
     private boolean userAsksForMoreImages(int newState, GridLayoutManager layoutManager) {
         return newState == RecyclerView.SCROLL_STATE_IDLE
-                && layoutManager.findLastVisibleItemPosition() == adapter.getItemCount() - 1;
+                && layoutManager.findLastVisibleItemPosition() == adapter.getItemCount() - 1 && adapter.imageUrls.size() > 0;
     }
 
     @Override
