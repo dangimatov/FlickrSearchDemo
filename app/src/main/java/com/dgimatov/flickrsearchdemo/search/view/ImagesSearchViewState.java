@@ -1,8 +1,6 @@
 package com.dgimatov.flickrsearchdemo.search.view;
 
 
-import android.util.Log;
-
 import com.dgimatov.flickrsearchdemo.search.model.ImageUrl;
 
 import java.util.List;
@@ -26,10 +24,12 @@ public class ImagesSearchViewState {
      * {@link ImageUrl}s have been loaded successfully. Show them
      */
     public static final class ShowImages extends ImagesSearchViewState {
-        public final List<ImageUrl> imageUrls;
+        final List<ImageUrl> imageUrls;
+        final int updateFromIndex;
 
-        public ShowImages(List<ImageUrl> imageUrls) {
+        public ShowImages(List<ImageUrl> imageUrls, int updateFromIndex) {
             this.imageUrls = imageUrls;
+            this.updateFromIndex = updateFromIndex;
         }
 
         @Override
@@ -50,7 +50,8 @@ public class ImagesSearchViewState {
         @Override
         public String toString() {
             return "ShowImages{" +
-                    "imageUrls=" + imageUrls +
+                    "imageUrls=" + imageUrls.size() +
+                    ", updateFromIndex=" + updateFromIndex +
                     '}';
         }
     }

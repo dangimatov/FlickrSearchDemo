@@ -42,8 +42,8 @@ public class PageDeserializerTest {
     @Test
     public void deserializePage() throws JSONException {
         Page expectedPage = new Page(1, 32, Arrays.asList(
-                new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755_m.jpg"),
-                new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0_m.jpg")));
+                new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755", ".jpg"),
+                new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0", ".jpg")));
         Page page = new PageDeserializer().deserialize(JSON);
         assertEquals(expectedPage, page);
 

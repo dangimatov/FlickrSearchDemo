@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class PageDeserializer {
 
-    private static final String IMAGE_URL_SCHEMA_MEDIUM_SIZE = "https://farm%s.staticflickr.com/%s/%s_%s_%s.jpg";
+    private static final String IMAGE_URL_SCHEMA_BASE_URL = "https://farm%s.staticflickr.com/%s/%s_%s";
 
     /**
      * @param json json
@@ -31,8 +31,8 @@ public class PageDeserializer {
             String secret = image.getString("secret");
             String server = image.getString("server");
             int farm = image.getInt("farm");
-            String imageUrl = String.format(IMAGE_URL_SCHEMA_MEDIUM_SIZE, farm, server, id, secret, "m");
-            imageUrls.add(new ImageUrl(imageUrl));
+            String baseImageUrl = String.format(IMAGE_URL_SCHEMA_BASE_URL, farm, server, id, secret);
+            imageUrls.add(new ImageUrl(baseImageUrl, ".jpg"));
         }
         return new Page(currentPage, totalPages, imageUrls);
     }

@@ -21,4 +21,9 @@ public interface ImageLoader {
      * @param id id of the image
      */
     void unsubscribe(String id);
+
+    /**
+     * Unsubscribes from all the tasks
+     */
+    void unsubscribeAll();
 }

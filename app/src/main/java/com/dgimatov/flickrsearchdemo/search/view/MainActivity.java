@@ -29,6 +29,8 @@ import static com.dgimatov.flickrsearchdemo.search.view.ImagesSearchViewState.*;
  */
 public class MainActivity extends AppCompatActivity implements ImagesSearchView {
 
+    private static final int TEXTWATCH_DELAY_MILLIS = 500;
+
     private ImagesSearchInteractor interactor;
     private ImagesListAdapter adapter;
     private ProgressBar progressBar;
@@ -65,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
             public void afterTextChanged(Editable s) {
                 uiHandler.removeCallbacks(newSearchRunnable);
                 newSearchRunnable = () -> interactor.newSearch(s.toString());
-                uiHandler.postDelayed(newSearchRunnable, 500);
+                uiHandler.postDelayed(newSearchRunnable, TEXTWATCH_DELAY_MILLIS);
             }
         });
     }
@@ -103,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
     protected void onStop() {
         super.onStop();
         interactor.onStop();
+        adapter.onStop();
     }
 
     private void showErrorDialog(Throwable e) {
@@ -119,7 +122,12 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
         uiHandler.post(() -> {
             if (state instanceof ShowImages) {
                 adapter.imageUrls = ((ShowImages) state).imageUrls;
-                adapter.notifyDataSetChanged();
+                int updateFromIndex = ((ShowImages) state).updateFromIndex;
+                if (updateFromIndex == 0) {
+                    adapter.notifyDataSetChanged();
+                } else {
+                    adapter.notifyItemRangeChanged(updateFromIndex - 1, adapter.imageUrls.size() - updateFromIndex);
+                }
                 progressBar.setVisibility(View.GONE);
                 recyclerView.setAlpha(1);
             }

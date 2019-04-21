@@ -58,6 +58,13 @@ public class ImagesListAdapter extends RecyclerView.Adapter<ImagesListAdapter.Im
         });
     }
 
+    /**
+     * Callback from a view that all running activities should be stopped
+     */
+    void onStop() {
+        imageLoader.unsubscribeAll();
+    }
+
     private Drawable getErrorDrawable() {
         Random rnd = new Random();
         return new ColorDrawable(Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256)));

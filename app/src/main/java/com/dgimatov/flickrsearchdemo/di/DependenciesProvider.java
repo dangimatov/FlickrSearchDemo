@@ -31,10 +31,16 @@ public final class DependenciesProvider {
         return imagesSearchRepository;
     }
 
+    /**
+     * @return instance of {@link ImagesSearchInteractor}
+     */
     public static ImagesSearchInteractor provideImagesSearchInteractor() {
         return new ImagesSearchInteractor(provideImagesSearchRepository());
     }
 
+    /**
+     * @return instance of {@link ImageLoader}
+     */
     public static ImageLoader provideImagesLoader() {
         return CachingRemoteImageLoader.getInstance();
     }

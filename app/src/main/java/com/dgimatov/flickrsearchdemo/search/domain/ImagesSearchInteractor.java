@@ -47,7 +47,7 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter, Pre
         currentPage.set(1);
         currentUrls.clear();
         currentQuery = text;
-        pushStateToView(new ShowImages(Collections.emptyList()));
+        pushStateToView(new ShowImages(Collections.emptyList(), 0));
 
         if (text.isEmpty()) {
             imagesSearchRepository.unsubscribeAll();
@@ -60,7 +60,7 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter, Pre
             public void onNext(Page value) {
                 synchronized (currentUrls) {
                     currentUrls.addAll(value.getImageUrls());
-                    pushStateToView(new ShowImages(new ArrayList<>(currentUrls)));
+                    pushStateToView(new ShowImages(new ArrayList<>(currentUrls), 0));
                 }
                 canLoadMore.set(value.getTotalPages() > 1);
             }
@@ -81,12 +81,14 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter, Pre
 
         pushStateToView(Loading.INSTANCE);
 
-        imagesSearchRepository.subscribe(currentQuery, currentPage.incrementAndGet(), new Listener<Page>() {
+        imagesSearchRepository.subscribe(currentQuery, currentPage.get() + 1, new Listener<Page>() {
             @Override
             public void onNext(Page value) {
                 synchronized (currentUrls) {
+                    currentPage.set(value.getCurrentPage());
+                    int updateFromIndex = currentUrls.size();
                     currentUrls.addAll(value.getImageUrls());
-                    pushStateToView(new ShowImages(new ArrayList<>(currentUrls)));
+                    pushStateToView(new ShowImages(new ArrayList<>(currentUrls), updateFromIndex));
                 }
                 canLoadMore.set(value.getTotalPages() > currentPage.get());
             }

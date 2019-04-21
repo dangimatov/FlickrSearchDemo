@@ -1,7 +1,5 @@
 package com.dgimatov.flickrsearchdemo.search.model;
 
-import android.util.Log;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -19,6 +17,7 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
 
     private static final String API_KEY = "3e7cc266ae2b0e0d78e279ce8e361736";
     private static final String FLICKR_SEARCH_API_SCHEMA = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=%s&format=json&nojsoncallback=1&safe_search=1&text=%s&page=%s";
+    private static final int CONNECT_TIMEOUT_MILLIS = 1000;
 
     private final ThreadPoolExecutor threadPoolExecutor;
     private final PageDeserializer pageDeserializer;
@@ -33,12 +32,12 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
 
     private void makeSearchRequest(String requestUrl) {
         Runnable runnable = () -> {
-            Log.i("test_", "loading urls on " + Thread.currentThread().getName() + "for url: " + requestUrl);
             HttpURLConnection urlConnection = null;
             try {
                 URL url = new URL(requestUrl);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.connect();
+                urlConnection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
                 StringBuilder sb = new StringBuilder();
                 String line = reader.readLine();

@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -22,6 +23,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 public final class CachingRemoteImageLoader implements ImageLoader {
 
     private static final int MAX_CACHE_SIZE_BYTES = 10 * 1024 * 1024; //~60 images
+    private static final int CONNECT_TIMEOUT_MILLIS = 500;
+    private static final int LOAD_TIMEOUT_MILLIS = 1500;
 
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
 
@@ -31,7 +34,7 @@ public final class CachingRemoteImageLoader implements ImageLoader {
     private static final ThreadPoolExecutor threadPoolExecutor =
             (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    private static LruCache<String, Bitmap> bitmapCache = new LruCache<String, Bitmap>(MAX_CACHE_SIZE_BYTES) {
+    private static final LruCache<String, Bitmap> bitmapCache = new LruCache<String, Bitmap>(MAX_CACHE_SIZE_BYTES) {
         @Override
         protected int sizeOf(String key, Bitmap value) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -58,13 +61,25 @@ public final class CachingRemoteImageLoader implements ImageLoader {
         tasks.remove(url);
     }
 
+    @Override
+    public void unsubscribeAll() {
+        listeners.clear();
+        Set<String> urls = tasks.keySet();
+        synchronized (tasks) {
+            for (String url : urls) {
+                threadPoolExecutor.remove(tasks.get(url));
+            }
+        }
+        tasks.clear();
+    }
+
     private Runnable fetchRemoteRunnable(String url) {
         return () -> {
             HttpURLConnection httpURLConnection = null;
             try {
                 httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
-                httpURLConnection.setConnectTimeout(500);
-                httpURLConnection.setReadTimeout(1500);
+                httpURLConnection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
+                httpURLConnection.setReadTimeout(LOAD_TIMEOUT_MILLIS);
                 InputStream is = httpURLConnection.getInputStream();
                 Bitmap bitmap = BitmapFactory.decodeStream(is);
                 bitmapCache.put(url, bitmap);

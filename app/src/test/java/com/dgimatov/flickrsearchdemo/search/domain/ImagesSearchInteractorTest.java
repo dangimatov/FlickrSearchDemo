@@ -28,11 +28,11 @@ import static org.mockito.Mockito.*;
 public class ImagesSearchInteractorTest {
 
     private final Page expectedPage = new Page(1, 2, Arrays.asList(
-            new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755_z.jpg"),
-            new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0_z.jpg")));
+            new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755", ".jpg"),
+            new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0", ".jpg")));
     private final Page expectedPage2 = new Page(2, 2, Arrays.asList(
-            new ImageUrl("https://farm3.staticflickr.com/1801/43052905061_ae07ea2755_z.jpg"),
-            new ImageUrl("https://farm3.staticflickr.com/1638/26405063166_085f53c4d0_z.jpg")));
+            new ImageUrl("https://farm3.staticflickr.com/1801/43052905061_ae07ea2755", ".jpg"),
+            new ImageUrl("https://farm3.staticflickr.com/1638/26405063166_085f53c4d0", ".jpg")));
 
     @Mock
     private ImagesSearchRepository imagesSearchRepository;
@@ -63,7 +63,7 @@ public class ImagesSearchInteractorTest {
         //Then
         InOrder inOrder = inOrder(view);
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls(), 0));
 
     }
 
@@ -86,7 +86,7 @@ public class ImagesSearchInteractorTest {
         //Then
         InOrder inOrder = inOrder(view);
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls(), 0));
 
     }
 
@@ -107,8 +107,8 @@ public class ImagesSearchInteractorTest {
         //Then
         InOrder inOrder = inOrder(view);
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(Collections.emptyList()));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls(), 0));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(Collections.emptyList(), 0));
 
     }
 
@@ -162,17 +162,17 @@ public class ImagesSearchInteractorTest {
         //Then
         InOrder inOrder = inOrder(view);
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls(), 0));
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedCombinedList));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedCombinedList, 2));
     }
 
     @Test
     public void nextPage_NotPossible_LastPage() {
         //Given
         final Page expectedOnlyPage = new Page(1, 1, Arrays.asList(
-                new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755_z.jpg"),
-                new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0_z.jpg")));
+                new ImageUrl("https://farm2.staticflickr.com/1801/43052905061_ae07ea2755", ".jpg"),
+                new ImageUrl("https://farm2.staticflickr.com/1638/26405063166_085f53c4d0", ".jpg")));
 
         doAnswer(invocation -> {
             Listener<Page> listener = invocation.getArgument(2);
@@ -188,7 +188,7 @@ public class ImagesSearchInteractorTest {
         //Then
         InOrder inOrder = inOrder(view);
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls(), 0));
         inOrder.verify(view).updateState(ImagesSearchViewState.LastPage.INSTANCE);
     }
 
@@ -216,7 +216,7 @@ public class ImagesSearchInteractorTest {
         //Then
         InOrder inOrder = inOrder(view);
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
-        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls()));
+        inOrder.verify(view).updateState(new ImagesSearchViewState.ShowImages(expectedPage.getImageUrls(), 0));
         inOrder.verify(view).updateState(ImagesSearchViewState.Loading.INSTANCE);
         inOrder.verify(view).updateState(new ImagesSearchViewState.Error(error));
     }
