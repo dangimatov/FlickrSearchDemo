@@ -2,7 +2,7 @@
 
 ### Preview
 
-![Preview](screenshot.png)
+![Preview](screenshot.jpg)
 
 ### Overview
 This project is an Android demo client for [Flickr's Search Api ](https://www.flickr.com/services/api/flickr.photos.search.html). It allows to search for images based on given search query. It was intentionally build using no 3rd party libraries as Coding Challenge for Uber interview.
