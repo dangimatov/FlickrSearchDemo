@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.dgimatov.flickrsearchdemo.R;
 import com.dgimatov.flickrsearchdemo.search.model.ImageLoaderRepository;
 import com.dgimatov.flickrsearchdemo.search.model.ImageUrl;
@@ -45,17 +46,22 @@ public class ImagesListAdapter extends RecyclerView.Adapter<ImagesListAdapter.Im
         imageLoaderRepository.unsubscribe(holder.currentUrl);
         holder.currentUrl = imageUrls.get(position).getUrl();
 
-        imageLoaderRepository.subscribe(holder.currentUrl, new Listener<Bitmap>() {
-            @Override
-            public void onNext(Bitmap bitmap) {
-                holder.iv.setImageBitmap(bitmap);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                holder.iv.setImageDrawable(getErrorDrawable());
-            }
-        });
+//        imageLoaderRepository.subscribe(holder.currentUrl, new Listener<Bitmap>() {
+//            @Override
+//            public void onNext(Bitmap bitmap) {
+//                holder.iv.setImageBitmap(bitmap);
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//                holder.iv.setImageDrawable(getErrorDrawable());
+//            }
+//        });
+        Glide.with(holder.itemView.getContext())
+                .load(holder.currentUrl)
+                .asGif()
+//                .crossFade()
+                .into(holder.iv);
     }
 
     /**

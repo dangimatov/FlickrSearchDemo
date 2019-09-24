@@ -1,5 +1,7 @@
 package com.dgimatov.flickrsearchdemo.search.domain;
 
+import android.util.Log;
+
 import com.dgimatov.flickrsearchdemo.search.model.ImageUrl;
 import com.dgimatov.flickrsearchdemo.search.model.ImagesSearchRepository;
 import com.dgimatov.flickrsearchdemo.search.model.Listener;
@@ -59,6 +61,7 @@ public class ImagesSearchInteractor implements ImagesSearchActionsPresenter, Pre
             @Override
             public void onNext(Page value) {
                 synchronized (currentUrls) {
+                    Log.i("test_", "page: " + value);
                     currentUrls.addAll(value.getImageUrls());
                     pushStateToView(new ShowImages(new ArrayList<>(currentUrls), 0));
                 }

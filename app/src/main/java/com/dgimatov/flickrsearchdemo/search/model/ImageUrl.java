@@ -13,14 +13,20 @@ public class ImageUrl {
         this.extensionPostfix = extensionPostfix;
     }
 
+    public ImageUrl(String url) {
+        this(url, "");
+    }
+
     /**
      * @return url-string of a thumbnail size image
      */
     public String getUrl() {
         stringBuilder.delete(0, stringBuilder.length());
         stringBuilder.append(baseUrl);
-        stringBuilder.append(SIZE_SUFFIX);
-        stringBuilder.append(extensionPostfix);
+        if (!extensionPostfix.equals("")) {
+            stringBuilder.append(SIZE_SUFFIX);
+            stringBuilder.append(extensionPostfix);
+        }
         return stringBuilder.toString();
     }
 

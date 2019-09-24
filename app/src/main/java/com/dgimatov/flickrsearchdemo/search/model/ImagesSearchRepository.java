@@ -15,6 +15,7 @@ public interface ImagesSearchRepository {
      */
     void subscribe(String text, int page, Listener<Page> listener);
 
+
     /**
      * Unsubscribe from repository. Meaning we are no longer interested in results and repo should
      * drop anything it's currently busy with and remove references to our listeners

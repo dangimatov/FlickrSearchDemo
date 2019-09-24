@@ -1,5 +1,7 @@
 package com.dgimatov.flickrsearchdemo.search.model;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -13,19 +15,20 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * Api client which retrieves {@link Page}s using Flickr Search API
  */
-public class FlickrSearchApiClient implements ImagesSearchRepository {
+public class GiphySearchApiClient implements ImagesSearchRepository {
 
-    private static final String API_KEY = "3e7cc266ae2b0e0d78e279ce8e361736";
-    private static final String FLICKR_SEARCH_API_SCHEMA = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=%s&format=json&nojsoncallback=1&safe_search=1&text=%s&page=%s";
+    private static final String API_KEY = "32rweBKqUGkDEfVaVpb6F2U5KFFPSf8e";
+    private static final String GIPHY_SEARCH_API_SCHEMA = "http://api.giphy.com/v1/gifs/search?api_key=%s&q=%s&limit=%s&offset=%s";
     private static final int CONNECT_TIMEOUT_MILLIS = 1000;
+    private static final int perPage = 20;
 
     private final ThreadPoolExecutor threadPoolExecutor;
-    private final PageDeserializer pageDeserializer;
+    private final GiphyDeserializer pageDeserializer;
 
     private final Map<String, Listener<Page>> listeners = Collections.synchronizedMap(new HashMap<>());
     private final Map<String, Runnable> tasks = Collections.synchronizedMap(new HashMap<>());
 
-    public FlickrSearchApiClient(ThreadPoolExecutor threadPoolExecutor, PageDeserializer pageDeserializer) {
+    public GiphySearchApiClient(ThreadPoolExecutor threadPoolExecutor, GiphyDeserializer pageDeserializer) {
         this.threadPoolExecutor = threadPoolExecutor;
         this.pageDeserializer = pageDeserializer;
     }
@@ -35,6 +38,7 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
             HttpURLConnection urlConnection = null;
             try {
                 URL url = new URL(requestUrl);
+                Log.i("test_", "url:" + requestUrl);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.connect();
                 urlConnection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
@@ -65,16 +69,20 @@ public class FlickrSearchApiClient implements ImagesSearchRepository {
         threadPoolExecutor.execute(runnable);
     }
 
+    private int calculateOffset(int perPage, int currentPage) {
+        return perPage * currentPage;
+    }
+
     @Override
     public void subscribe(String text, int page, Listener<Page> listener) {
         unsubscribeAll();
-        String requestUrl = buildRequestUrl(text, page);
+        String requestUrl = buildRequestUrl(text, page, calculateOffset(perPage, page));
         listeners.put(requestUrl, listener);
         makeSearchRequest(requestUrl);
     }
 
-    private String buildRequestUrl(String text, int page) {
-        return String.format(FLICKR_SEARCH_API_SCHEMA, API_KEY, text, page);
+    private String buildRequestUrl(String text, int limit, int offset) {
+        return String.format(GIPHY_SEARCH_API_SCHEMA, API_KEY, text, limit, offset);
     }
 
     @Override

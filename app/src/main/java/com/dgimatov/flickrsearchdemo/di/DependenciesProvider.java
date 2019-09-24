@@ -2,7 +2,8 @@ package com.dgimatov.flickrsearchdemo.di;
 
 import com.dgimatov.flickrsearchdemo.search.domain.ImagesSearchInteractor;
 import com.dgimatov.flickrsearchdemo.search.model.CachingRemoteImageLoader;
-import com.dgimatov.flickrsearchdemo.search.model.FlickrSearchApiClient;
+import com.dgimatov.flickrsearchdemo.search.model.GiphyDeserializer;
+import com.dgimatov.flickrsearchdemo.search.model.GiphySearchApiClient;
 import com.dgimatov.flickrsearchdemo.search.model.ImageLoaderRepository;
 import com.dgimatov.flickrsearchdemo.search.model.ImagesSearchRepository;
 import com.dgimatov.flickrsearchdemo.search.model.PageDeserializer;
@@ -20,11 +21,11 @@ public final class DependenciesProvider {
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>());
 
-    private static final ImagesSearchRepository imagesSearchRepository = new FlickrSearchApiClient(
+    private static final ImagesSearchRepository imagesSearchRepository = new GiphySearchApiClient(
             singleThreadPoolExecutor, providePageDeserializer());
 
-    private static PageDeserializer providePageDeserializer() {
-        return new PageDeserializer();
+    private static GiphyDeserializer providePageDeserializer() {
+        return new GiphyDeserializer();
     }
 
     private static ImagesSearchRepository provideImagesSearchRepository() {

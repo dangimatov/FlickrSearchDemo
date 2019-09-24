@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -119,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
 
     @Override
     public void updateState(ImagesSearchViewState state) {
+        Log.i("test_", "state: " + state);
         uiHandler.post(() -> {
             if (state instanceof ShowImages) {
                 adapter.imageUrls = ((ShowImages) state).imageUrls;
@@ -138,6 +140,8 @@ public class MainActivity extends AppCompatActivity implements ImagesSearchView 
                 adapter.imageUrls = Collections.emptyList();
                 adapter.notifyDataSetChanged();
                 searchEditText.setText("");
+                Throwable e = ((ImagesSearchViewState.Error) state).exception;
+                Log.i("test", Log.getStackTraceString(e));
                 showErrorDialog(((ImagesSearchViewState.Error) state).exception);
             }
 
